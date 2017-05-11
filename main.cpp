@@ -115,30 +115,6 @@ int main() {
 	cin.get();
 }
 
-size_t long_vertical(vector<vector<int>> &map, size_t start, size_t end) {
-	vector<int> vec_col;
-	size_t max_val = 0;
-	size_t temp_val;
-	for (size_t col = start; col < end; ++col) {
-		for (size_t row = 0; row < 199; ++row) {
-			if (map[row][col] == map[row + 1][col]) {
-				vec_col.push_back(row);
-				vec_col.push_back(row + 1);
-			}
-			else {
-				sort(vec_col.begin(), vec_col.end());
-				auto unique_iter = unique(vec_col.begin(), vec_col.end());
-				vec_col.erase(unique_iter, vec_col.end());
-				temp_val = vec_col.size();
-				if (temp_val > max_val)
-					max_val = temp_val;
-				vec_col.clear();
-			}
-		}
-	}
-	return max_val;
-}
-
 void contrastFirst(mutex &readyMutex, const vector<vector<int>> &map, vector<pair<int, int>> &cords, size_t row_min, size_t row_max, size_t col_min, size_t col_max, size_t add_row, size_t add_col) {
 		for (size_t row = row_min; row < row_max; ++row) {
 			for (size_t col = col_min; col < col_max; ++col) {
@@ -166,4 +142,28 @@ void contrastSecond(mutex &readyMutex, const vector<vector<int>> &map, vector<pa
 			}
 		}
 	}
+}
+
+size_t long_vertical(vector<vector<int>> &map, size_t start, size_t end) {
+	vector<int> vec_col;
+	size_t max_val = 0;
+	size_t temp_val;
+	for (size_t col = start; col < end; ++col) {
+		for (size_t row = 0; row < 199; ++row) {
+			if (map[row][col] == map[row + 1][col]) {
+				vec_col.push_back(row);
+				vec_col.push_back(row + 1);
+			}
+			else {
+				sort(vec_col.begin(), vec_col.end());
+				auto unique_iter = unique(vec_col.begin(), vec_col.end());
+				vec_col.erase(unique_iter, vec_col.end());
+				temp_val = vec_col.size();
+				if (temp_val > max_val)
+					max_val = temp_val;
+				vec_col.clear();
+			}
+		}
+	}
+	return max_val;
 }
