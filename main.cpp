@@ -3,6 +3,7 @@
 #include <thread>
 #include <mutex>
 #include <fstream>
+#include <chrono>
 #include <algorithm>
 #include <iterator>
 #include <vector>
