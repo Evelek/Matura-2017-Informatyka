@@ -1,7 +1,6 @@
 #include <iostream>
 #include <future>
 #include <thread>
-#include <chrono>
 #include <mutex>
 #include <fstream>
 #include <algorithm>
@@ -148,6 +147,7 @@ void contrastFirst(mutex &readyMutex, const vector<vector<int>> &map, vector<pai
 						unique_lock<mutex> uniqueLock(readyMutex);
 						cords.push_back(make_pair(row, col));
 						cords.push_back(make_pair(row + add_row, col + add_col));
+						this_thread::yield();
 					}
 				}
 			}
@@ -161,6 +161,7 @@ void contrastSecond(mutex &readyMutex, const vector<vector<int>> &map, vector<pa
 					unique_lock<mutex> uniqueLock(readyMutex);
 					cords.push_back(make_pair(row, col));
 					cords.push_back(make_pair(row - add_row, col - add_col));
+					this_thread::yield();
 				}
 			}
 		}
