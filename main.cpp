@@ -116,18 +116,18 @@ int main() {
 }
 
 void contrastFirst(mutex &readyMutex, const vector<vector<int>> &map, vector<pair<int, int>> &cords, size_t row_min, size_t row_max, size_t col_min, size_t col_max, size_t add_row, size_t add_col) {
-		for (size_t row = row_min; row < row_max; ++row) {
-			for (size_t col = col_min; col < col_max; ++col) {
-				if (abs(map[row][col] - map[row + add_row][col + add_col]) > 128) {
-					{
-						unique_lock<mutex> uniqueLock(readyMutex);
-						cords.push_back(make_pair(row, col));
-						cords.push_back(make_pair(row + add_row, col + add_col));
-						this_thread::yield();
-					}
+	for (size_t row = row_min; row < row_max; ++row) {
+		for (size_t col = col_min; col < col_max; ++col) {
+			if (abs(map[row][col] - map[row + add_row][col + add_col]) > 128) {
+				{
+					unique_lock<mutex> uniqueLock(readyMutex);
+					cords.push_back(make_pair(row, col));
+					cords.push_back(make_pair(row + add_row, col + add_col));
+					this_thread::yield();
 				}
 			}
 		}
+	}
 }
 void contrastSecond(mutex &readyMutex, const vector<vector<int>> &map, vector<pair<int, int>> &cords, size_t row_min, size_t row_max, size_t col_min, size_t col_max, size_t add_row, size_t add_col) {
 	for (size_t row = row_min; row > row_max; --row) {
