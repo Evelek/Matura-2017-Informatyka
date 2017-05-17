@@ -8,11 +8,21 @@
 #include <iterator>
 #include <vector>
 #include <utility>
-using namespace std;
+using namespace std::chrono_literals; // used for this_thread::sleep_for() - C++14
+using std::vector;
+using std::pair;
+using std::mutex;
+using std::ifstream;
+using std::future;
+using std::cout;
+using std::endl;
 
-size_t long_vertical(vector<vector<int>> &map, size_t start, size_t end);
-void contrastFirst(mutex &readyMutex, const vector<vector<int>> &map, vector<pair<int, int>> &cords, size_t row_min, size_t row_max, size_t col_min, size_t col_max, size_t add_row, size_t add_col);
-void contrastSecond(mutex &readyMutex, const vector<vector<int>> &map, vector<pair<int, int>> &cords, size_t row_min, size_t row_max, size_t col_min, size_t col_max, size_t add_row, size_t add_col);
+using mapFile = vector<vector<int>>;
+using coordinate = vector<pair<int, int>>;
+
+void contrastFirst(mutex &readyMutex, const mapFile &map, coordinate &cords, size_t row_min, size_t row_max, size_t col_min, size_t col_max, size_t add_row, size_t add_col);
+void contrastSecond(mutex &readyMutex, const mapFile &map, coordinate &cords, size_t row_min, size_t row_max, size_t col_min, size_t col_max, size_t add_row, size_t add_col);
+size_t longVertical(mapFile &map, size_t start, size_t end);
 
 int main() {
 
@@ -22,12 +32,12 @@ int main() {
 
 	if (!readFile.is_open()) {
 		cout << "There was an error while opening the file.\n";
-		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+		std::this_thread::sleep_for(2000ms);
 		return -1;
 	}
 
 	// 2D vector
-	vector<vector<int>> map;
+	mapFile map;
 	for (size_t i = 0; i < 200; i++) {
 		vector<int> row;
 		map.push_back(row);
@@ -50,7 +60,7 @@ int main() {
 	readFile.close();
 
 	//---------------------------------------------------------------------
-	
+
 	// Zad 6 a)
 	int max = map[0][0];
 	int min = map[0][0];
@@ -84,10 +94,10 @@ int main() {
 	// Zad 6 c)
 	vector<pair<int, int>> cords;
 	mutex readyMutex;
-	future<void> c1 = async(launch::async, contrastFirst, ref(readyMutex), cref(map), ref(cords), 0, 200, 0, 319, 0, 1);
-	future<void> c2 = async(launch::async, contrastFirst, ref(readyMutex), cref(map), ref(cords), 0, 199, 0, 320, 1, 0);
-	future<void> c3 = async(launch::async, contrastSecond, ref(readyMutex), cref(map), ref(cords), 199, 0, 319, 1, 0, 1);
-	future<void> c4 = async(launch::async, contrastSecond, ref(readyMutex), cref(map), ref(cords), 199, 1, 319, 0, 1, 0);
+	future<void> c1 = async(std::launch::async, contrastFirst, ref(readyMutex), cref(map), ref(cords), 0, 200, 0, 319, 0, 1);
+	future<void> c2 = async(std::launch::async, contrastFirst, ref(readyMutex), cref(map), ref(cords), 0, 199, 0, 320, 1, 0);
+	future<void> c3 = async(std::launch::async, contrastSecond, ref(readyMutex), cref(map), ref(cords), 199, 0, 319, 1, 0, 1);
+	future<void> c4 = async(std::launch::async, contrastSecond, ref(readyMutex), cref(map), ref(cords), 199, 1, 319, 0, 1, 0);
 
 	c1.get();
 	c2.get();
@@ -102,8 +112,8 @@ int main() {
 	//-----------------------------------------------------------------------
 
 	// Zad 6 d)
-	future<size_t> f1 = async(launch::async, long_vertical, map, 0, 160);
-	future<size_t> f2 = async(launch::async, long_vertical, map, 160, 320);
+	future<size_t> f1 = async(std::launch::async, longVertical, map, 0, 160);
+	future<size_t> f2 = async(std::launch::async, longVertical, map, 160, 320);
 
 	size_t first_result = f1.get();
 	size_t second_result = f2.get();
@@ -113,39 +123,39 @@ int main() {
 	else
 		cout << "The longest vertical line: " << first_result << endl;
 
-	cin.get();
+	std::cin.get();
 }
 
-void contrastFirst(mutex &readyMutex, const vector<vector<int>> &map, vector<pair<int, int>> &cords, size_t row_min, size_t row_max, size_t col_min, size_t col_max, size_t add_row, size_t add_col) {
+void contrastFirst(mutex &readyMutex, const mapFile &map, coordinate &cords, size_t row_min, size_t row_max, size_t col_min, size_t col_max, size_t add_row, size_t add_col) {
 	for (size_t row = row_min; row < row_max; ++row) {
 		for (size_t col = col_min; col < col_max; ++col) {
 			if (abs(map[row][col] - map[row + add_row][col + add_col]) > 128) {
 				{
-					unique_lock<mutex> uniqueLock(readyMutex);
-					cords.push_back(make_pair(row, col));
-					cords.push_back(make_pair(row + add_row, col + add_col));
-					this_thread::yield();
+					std::unique_lock<mutex> uniqueLock(readyMutex);
+					cords.push_back(std::make_pair(row, col));
+					cords.push_back(std::make_pair(row + add_row, col + add_col));
+					std::this_thread::yield();
 				}
 			}
 		}
 	}
 }
-void contrastSecond(mutex &readyMutex, const vector<vector<int>> &map, vector<pair<int, int>> &cords, size_t row_min, size_t row_max, size_t col_min, size_t col_max, size_t add_row, size_t add_col) {
+void contrastSecond(mutex &readyMutex, const mapFile &map, coordinate &cords, size_t row_min, size_t row_max, size_t col_min, size_t col_max, size_t add_row, size_t add_col) {
 	for (size_t row = row_min; row > row_max; --row) {
 		for (size_t col = col_min; col > col_max; --col) {
 			if (abs(map[row][col] - map[row - add_row][col - add_col]) > 128) {
 				{
-					unique_lock<mutex> uniqueLock(readyMutex);
-					cords.push_back(make_pair(row, col));
-					cords.push_back(make_pair(row - add_row, col - add_col));
-					this_thread::yield();
+					std::unique_lock<mutex> uniqueLock(readyMutex);
+					cords.push_back(std::make_pair(row, col));
+					cords.push_back(std::make_pair(row - add_row, col - add_col));
+					std::this_thread::yield();
 				}
 			}
 		}
 	}
 }
 
-size_t long_vertical(vector<vector<int>> &map, size_t start, size_t end) {
+size_t longVertical(mapFile &map, size_t start, size_t end) {
 	vector<int> vec_col;
 	size_t max_val = 0;
 	size_t temp_val;
