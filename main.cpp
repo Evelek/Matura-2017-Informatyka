@@ -53,7 +53,7 @@ int main() {
 
 	if (readFile.fail()) {
 		cout << "There was an error while reading data.\n";
-		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+		std::this_thread::sleep_for(2000ms);
 		return -1;
 	}
 
